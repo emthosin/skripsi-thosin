@@ -10,7 +10,7 @@
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/">Home</a></li>
             <li class="breadcrumb-item"><a href="/matrices">Matrix</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Calculation</li>
+            <li class="breadcrumb-item active" aria-current="page">Calculation MEREC</li>
           </ol>
         </nav>
       </div>
@@ -18,16 +18,27 @@
   </div>
 </div>
 
-<!-- BEGINNING OF MEREC -->
-
 <div class="container-fluid">
   <div class="row">
     <div class="col-12">
       <div class="card">
         <div class="card-body">
-        <h5 class="card-title mb-3"><strong>Method Based on the Removal Effects of Criteria (MEREC)</strong></h5>
- 
-        <h5 class="card-title mb-3">1.1. Decision Matrix</h5>
+          <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">There are two steps, which are:</h4>
+            <p>1. Weighting the criterias using MEREC and CRITIC methods</p>
+            <a href="/countMerec" class="btn btn-info"><i class="mdi mdi-calculator"></i> MEREC</a>
+            <a href="/countCritic" class="btn btn-info"><i class="mdi mdi-calculator"></i> CRITIC</a>
+            </p>
+            <p>2. Ranking the alternatives using MOORA methods</p>
+            <a href="/countMoora" class="btn btn-info"><i class="mdi mdi-calculator"></i> MOORA</a>
+          </div>
+        </div> 
+
+<!-- BEGINNING OF MEREC -->  
+
+        <div class="card-body">
+          <h5 class="card-title mb-3"><b>Calculation of Method Based on the Removal Effects of Criteria (MEREC)</b></h5>
+          <h5 class="card-title mb-3">1.1. Decision Matrix</h5>
           <div class="table-responsive mt-3">
             <table id="merec_1" class="table table-striped table-bordered">
               <thead>
@@ -407,6 +418,7 @@
 
 <!-- END OF MEREC -->
 <!-- BEGINNING OF CRITIC -->
+<!--
         <div class="card-body">
           <h5 class="card-title mb-3"><strong>Criteria Importance Through Inter-Criteria Correlation (CRITIC)</strong></h5>
           <h5 class="card-title mb-3">2.1. Decision Matrix</h5>
@@ -495,7 +507,7 @@
               </table>
             </div>
           </div>
-
+-->
           <!-- STANDARD DEVIATION START -->
           <!-- <div class="card-body">
           <h5 class="card-title mb-3">MEAN</h5>
@@ -649,6 +661,7 @@
 
         </div> -->
           <!-- STANDARD DEVIATION FINISH -->
+<!--
           <div class="card-body">
           <h5 class="card-title mb-3">2.3. Calculation of Standard Deviation for Each Criteria</h5>
           <div class="table-responsive mt-3">
@@ -848,8 +861,9 @@
           </div>
 
         </div>
+-->
         <!-- END OF CRITIC -->
-
+<!--
         <div class="row">
           <div class="col-lg-6 col-md-12">
             <div class="card-body">
@@ -932,8 +946,9 @@
             </div>
           </div>
         </div>
-
+-->
         <!-- BEGINNING OF MOORA -->
+<!--
         <div class="card-body">
           <h5 class="card-title mb-3"><strong>Method Based on the Ratio Analysis (MOORA)</strong></h5>
           <h5 class="card-title mb-3">3.1. Decision Matrix</h5>
@@ -1248,7 +1263,7 @@
             </div>
           </div>
         </div>
-
+-->
         <!-- <div class="card-body">
           <h5 class="card-title mb-3">Perankingan SMK</h5>
           <div class="table-responsive mt-3">

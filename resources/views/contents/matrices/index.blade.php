@@ -27,7 +27,10 @@
 
           @if (!$data->isEmpty())
           {{-- <a href="#" class="btn btn-success"><i class="mdi mdi-calculator"></i> Calculate</a> --}}
-          <a href="/count" class="btn btn-success"><i class="mdi mdi-calculator"></i> Calculate</a>
+          <a href="/countMerec" class="btn btn-success"><i class="mdi mdi-calculator"></i> Calculate</a>
+<!--          <a href="/countCritic" class="btn btn-success"><i class="mdi mdi-calculator"></i> Calculate CRITIC</a>
+          <a href="/countMoora" class="btn btn-success"><i class="mdi mdi-calculator"></i> Calculate MOORA</a>
+-->
           <a href="javascript:void(0)" class="btn btn-danger btn-truncate"><i class="mdi mdi-delete"></i>
             Delete All Data</a>
           <form action="/matrices/truncate" method="POST" id="truncate-form" class="d-inline-block">

@@ -42,7 +42,7 @@
               <label for="name" class="col-sm-3 text-left control-label col-form-label">Name</label>
               <div class="col-sm-9">
                 <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name"
-                  placeholder="Insert Name Heref" value="{{ old('name') }}">
+                  placeholder="Insert Name Here" value="{{ old('name') }}">
                 @error('name')
                 <div class="invalid-feedback">
                   {{ $message }}

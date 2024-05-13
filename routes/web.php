@@ -39,4 +39,6 @@ Route::resource('/matrices', MatrixController::class)->except(['show'])->middlew
 Route::post('/matrices/truncate', [MatrixController::class, 'truncate'])->middleware('auth');
 Route::get('/matrices/alternatives', [MatrixController::class, 'rank'])->middleware('auth');
 
-Route::get('/count', [MatrixController::class, 'count'])->middleware('auth');
+Route::get('/countMerec', [MatrixController::class, 'countMerec'])->middleware('auth');
+Route::get('/countCritic', [MatrixController::class, 'countCritic'])->middleware('auth');
+Route::get('/countMoora', [MatrixController::class, 'countMoora'])->middleware('auth');

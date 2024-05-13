@@ -27,6 +27,21 @@ class StoreMatrixRequest extends FormRequest
             'alternative_id' => ['required'],
             'criteria_id' => ['required'],
             'value' => ['required', 'numeric', 'min:0'],
+ /*            'price' => ['required'],
+            'length' => ['required'],
+            'type' => ['required'],
+            'size' => ['required'],
+            'facilities' => ['required'],
+            'roomate' => ['required'],
+            'kitchen' => ['required'],
+            'kitchenette' => ['required'],
+            'residence' => ['required'],
+            'distance' => ['required'],
+            'parking' => ['required'],
+            'gym' => ['required'],
+            'review' => ['required'],
+            'rating' => ['required'],
+*/
         ];
     }
 }

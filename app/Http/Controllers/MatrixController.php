@@ -166,7 +166,7 @@ class MatrixController extends Controller
         ]);
     }
 
-    public function count()
+    public function countMerec()
     {
         $data = Matrix::with('alternative', 'criteria')->latest()->get();
 
@@ -504,7 +504,7 @@ class MatrixController extends Controller
 
         // dd($matrix, $max, $min, $normalisasi, $sumEachCriteria, $averageValue, $pow, $sumPow, $result, $sumResult, $criteriaWeight, $psi, $sumPsi, $sumPsiRank);
 
-        return view('contents.calculate.index', [
+        return view('contents.calculateMerec.index', [
             'data' => $data,
             'matrix' => $matrix,
             'max' => $max,
@@ -521,6 +521,484 @@ class MatrixController extends Controller
             'psi' => $psi,
             'sumPsi' => $sumPsi,
             'sumPsiRank' => $sumPsiRank, */
+            'alternativeCount' => $alternativeCount,
+            'criteriaCount' => $criteriaCount,
+            'logValues' => $logValues,
+            'absValues' => $absValues,
+            'sumValues' => $sumValues,
+            'sumValuess' => $sumValuess,
+            'sumAbsLogCriterias' => $sumAbsLogCriterias,
+            'removalEffect' => $removalEffect,
+            'weight' => $weight,
+            'normalisasiCritic' => $normalisasiCritic,
+            'stdDev' => $stdDev,
+            'columnMeans' => $columnMeans,
+            'distance' => $distance,
+            'sumDis' => $sumDis,
+            'divided' => $divided,
+            'correl' => $correl,
+            'conflicCreated' => $conflicCreated,
+            'est' => $est,
+            'weightCritic' => $weightCritic,
+            'normalisasiMoora' => $normalisasiMoora,
+            'merecWeighted' => $merecWeighted,
+            'criticWeighted' => $criticWeighted,
+            'merecRank' => $merecRank,
+            'criticRank' => $criticRank,
+            'criterias' => Criteria::all(),
+            'alternatives' => Alternative::all(),
+        ]);
+    }
+    public function countCritic()
+    {
+        $data = Matrix::with('alternative', 'criteria')->latest()->get();
+
+        // check if data is empty
+        if ($data->isEmpty()) {
+            Alert::error('Error', 'Data to be calculated is empty! Please complete the data first.');
+            return redirect('/matrices');
+        } else {
+            $alternativeCount = Alternative::count();
+            $criteriaCount = Criteria::count();
+
+            // create array 2 dimensional and push data from $data
+            $matrix = [];
+            foreach ($data as $value) {
+                $matrix[$value->alternative_id][$value->criteria_id] = $value->value;
+            }
+
+            ksort($matrix);
+
+            foreach ($matrix as $key => $value) {
+                ksort($matrix[$key]);
+            }
+
+            $jumlahAlternatif = count($matrix);
+            $jumlahKriteria = count($matrix[1]);
+
+            if ($jumlahAlternatif != $alternativeCount || $jumlahKriteria != $criteriaCount) {
+                Alert::error('Error', 'Data to be calculated is incomplete! Please complete the data first.');
+                return redirect('/matrices');
+            } else {
+                // create max and min each criteria
+                $max = [];
+                $min = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $max[$i] = max(array_column($matrix, $i));
+                    $min[$i] = min(array_column($matrix, $i));
+                }
+
+                // BEGINNING OF CRITIC
+
+                // NORMALIZATION
+                $normalisasiCritic = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        if (Criteria::find($j)->type == 'benefit') {
+                            $normalisasiCritic[$i][$j] = ($matrix[$i][$j] - $min[$j]) / ($max[$j] - $min[$j]);
+                        } else {
+                            $normalisasiCritic[$i][$j] = ($matrix[$i][$j] - $max[$j]) / ($min[$j] - $max[$j]);
+                        }
+                    }
+                }
+
+                // Calculation of Standard Deviation for Each Criteria
+                
+                // 1. Column Mean
+                $columnMeans = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $columnMeans[$i] = array_sum(array_column($normalisasiCritic, $i)) / $jumlahAlternatif;
+                }
+                
+                // 2. Calculate the squared differences from the mean for each column
+                $distance = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        $distance[$i][$j] = pow($normalisasiCritic[$i][$j] - $columnMeans[$j], 2);
+                    }
+                }
+
+                //3. SUM
+                $sumDis = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $sumDis[$i] = array_sum(array_column($distance, $i));
+                }
+
+                // 4. DIVIDE BY ALT
+                $divided = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $divided[$i] = $sumDis[$i] / $jumlahAlternatif;
+                }
+
+                // RESULT
+                $stdDev = array_map('sqrt', $divided);
+
+                // Determine the Symmetric Matrix
+                $columns = [];
+                // Iterate through each column index
+                for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                    // Initialize an array to store elements of the current column
+                    $column = [];
+                    // Iterate through each row
+                    for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                        // Add the element at the current column index to the column array
+                        $column[] = $normalisasiCritic[$i][$j];
+                    }
+                    // Add the column array to the columns array
+                    $columns[] = $column;
+                }
+                //dd($columns[1]);
+
+                $correl = [];
+                for ($i = 1; $i <= count($normalisasiCritic[$i]); $i++) {
+                    for ($j = 1; $j <= count($normalisasiCritic[$i]); $j++) {
+                        $correl[$i][$j] = Correlation::r($columns[$i-1], $columns[$j-1]);
+                        
+                    }
+                }
+
+                // Measure of the Conflict Created by Criterion
+                $conflicCreated = [];
+                for ($i = 1; $i <= count($normalisasiCritic[$i]); $i++) {
+                    for ($j = 1; $j <= count($normalisasiCritic[$i]); $j++) {
+                        $conflicCreated[$i][$j] = 1 - $correl[$i][$j];
+                        
+                    }
+                }
+
+                // Estimation of Criterion information Cj 
+                $est = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $est[$i] = array_sum($conflicCreated[$i]) * $stdDev[$i];
+                }
+
+                // Determining the Objective Weights
+                $weightCritic = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $weightCritic[$i] = $est[$i] / array_sum($est);
+                }
+                
+            }
+        }
+
+        return view('contents.calculateCritic.index', [
+            'data' => $data,
+            'matrix' => $matrix,
+            'max' => $max,
+            'min' => $min,
+            'alternativeCount' => $alternativeCount,
+            'criteriaCount' => $criteriaCount,
+            'normalisasiCritic' => $normalisasiCritic,
+            'stdDev' => $stdDev,
+            'columnMeans' => $columnMeans,
+            'distance' => $distance,
+            'sumDis' => $sumDis,
+            'divided' => $divided,
+            'correl' => $correl,
+            'conflicCreated' => $conflicCreated,
+            'est' => $est,
+            'weightCritic' => $weightCritic,
+            'criterias' => Criteria::all(),
+            'alternatives' => Alternative::all(),
+        ]);
+    }
+    
+    public function countMoora()
+    {
+        $data = Matrix::with('alternative', 'criteria')->latest()->get();
+
+        // check if data is empty
+        if ($data->isEmpty()) {
+            Alert::error('Error', 'Data to be calculated is empty! Please complete the data first.');
+            return redirect('/matrices');
+        } else {
+            $alternativeCount = Alternative::count();
+            $criteriaCount = Criteria::count();
+
+            // create array 2 dimensional and push data from $data
+            $matrix = [];
+            foreach ($data as $value) {
+                $matrix[$value->alternative_id][$value->criteria_id] = $value->value;
+            }
+
+            ksort($matrix);
+
+            foreach ($matrix as $key => $value) {
+                ksort($matrix[$key]);
+            }
+
+            $jumlahAlternatif = count($matrix);
+            $jumlahKriteria = count($matrix[1]);
+
+            if ($jumlahAlternatif != $alternativeCount || $jumlahKriteria != $criteriaCount) {
+                Alert::error('Error', 'Data to be calculated is incomplete! Please complete the data first.');
+                return redirect('/matrices');
+            } else {
+                // create max and min each criteria
+                $max = [];
+                $min = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $max[$i] = max(array_column($matrix, $i));
+                    $min[$i] = min(array_column($matrix, $i));
+                }
+
+                // BEGINNING OF MEREC
+                // create matrix normalize by dividing each value with max if benefit and min if cost
+                $normalisasi = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        if (Criteria::find($j)->type == 'benefit') {
+                            $normalisasi[$i][$j] = $min[$j] / $matrix[$i][$j];
+                        } else {
+                            $normalisasi[$i][$j] = $matrix[$i][$j] / $max[$j];
+                        }
+                    }
+                }
+
+                // Calculation of Overall Performance of alternatives (Si)
+                $sumEachCriteria = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $sumEachCriteria[$i] = array_sum(array_column($normalisasi, $i));
+                }
+
+                // =LN(1+((1/14)*(ABS(LN(B61))+ABS(LN(C61))+ABS(LN(D61))+ABS(LN(E61))+ABS(LN(F61))+ABS(LN(G61))+ABS(LN(H61))+ABS(LN(I61))+ABS(LN(J61))+ABS(LN(K61))+ABS(LN(L61))+ABS(LN(M61))+ABS(LN(N61))+ABS(LN(O61)))))
+                // LOG ALL VALUES
+                $logValues = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        $logValues[$i][$j] = log($normalisasi[$i][$j]);
+                    }
+                }
+
+                // ABS ALL VALUES
+                $absValues = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        $absValues[$i][$j] = abs($logValues[$i][$j]);
+                    }
+                }
+
+                // SUM ALL CRITERIAS BY ALTERNATIVES
+                $sumValues = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    $sumValues[$i] = array_sum($absValues[$i]);
+                }
+                
+                // FINAL VALUES
+                $sumAbsLogCriteria = [];
+                    for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                        $sumAbsLogCriteria[$i] = log(1+((1/14) * $sumValues[$i]));
+                }
+                
+                // SUM ALL CRITERIAS BY ALTERNATIVES 2
+                $sumValuess = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        // Initialize sum for current element
+                        $sum = 0;
+                        // Loop through each column to calculate sum excluding current index
+                        for ($col = 1; $col <= $jumlahKriteria; $col++) {
+                            if ($col != $j) {
+                                $sum += $absValues[$i][$col];
+                            }
+                        }
+                        // Assign the sum to the result array
+                        $sumValuess[$i][$j] = $sum;
+                    }
+                }
+                
+                // FINAL VALUES 2
+                $sumAbsLogCriterias = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        $sumAbsLogCriterias[$i][$j] = log(1+((1/14) * $sumValuess[$i][$j]));
+                    }
+                }
+
+                // Calculation of Removal Effect (Ej)
+                $removalEffect = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        $removalEffect[$i][$j] =  abs($sumAbsLogCriteria[$i] - $sumAbsLogCriterias[$i][$j]);
+                    }
+                }
+
+                // Estimate the final Weights (Wj)
+                $weightEst = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    $weightEst[$i] = array_sum(array_column($removalEffect, $i));
+                }
+
+                $weight = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $weight[$i] = $weightEst[$i] / array_sum($weightEst);
+                }
+
+                // END OF MEREC
+
+                // BEGINNING OF CRITIC
+
+                // NORMALIZATION
+                $normalisasiCritic = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        if (Criteria::find($j)->type == 'benefit') {
+                            $normalisasiCritic[$i][$j] = ($matrix[$i][$j] - $min[$j]) / ($max[$j] - $min[$j]);
+                        } else {
+                            $normalisasiCritic[$i][$j] = ($matrix[$i][$j] - $max[$j]) / ($min[$j] - $max[$j]);
+                        }
+                    }
+                }
+
+                // Calculation of Standard Deviation for Each Criteria
+                
+                // 1. Column Mean
+                $columnMeans = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $columnMeans[$i] = array_sum(array_column($normalisasiCritic, $i)) / $jumlahAlternatif;
+                }
+                
+                // 2. Calculate the squared differences from the mean for each column
+                $distance = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        $distance[$i][$j] = pow($normalisasiCritic[$i][$j] - $columnMeans[$j], 2);
+                    }
+                }
+
+                //3. SUM
+                $sumDis = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $sumDis[$i] = array_sum(array_column($distance, $i));
+                }
+
+                // 4. DIVIDE BY ALT
+                $divided = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $divided[$i] = $sumDis[$i] / $jumlahAlternatif;
+                }
+
+                // RESULT
+                $stdDev = array_map('sqrt', $divided);
+
+                // Determine the Symmetric Matrix
+                $columns = [];
+                // Iterate through each column index
+                for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                    // Initialize an array to store elements of the current column
+                    $column = [];
+                    // Iterate through each row
+                    for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                        // Add the element at the current column index to the column array
+                        $column[] = $normalisasiCritic[$i][$j];
+                    }
+                    // Add the column array to the columns array
+                    $columns[] = $column;
+                }
+                //dd($columns[1]);
+
+                $correl = [];
+                for ($i = 1; $i <= count($normalisasiCritic[$i]); $i++) {
+                    for ($j = 1; $j <= count($normalisasiCritic[$i]); $j++) {
+                        $correl[$i][$j] = Correlation::r($columns[$i-1], $columns[$j-1]);
+                        
+                    }
+                }
+
+                // Measure of the Conflict Created by Criterion
+                $conflicCreated = [];
+                for ($i = 1; $i <= count($normalisasiCritic[$i]); $i++) {
+                    for ($j = 1; $j <= count($normalisasiCritic[$i]); $j++) {
+                        $conflicCreated[$i][$j] = 1 - $correl[$i][$j];
+                        
+                    }
+                }
+
+                // Estimation of Criterion information Cj 
+                $est = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $est[$i] = array_sum($conflicCreated[$i]) * $stdDev[$i];
+                }
+
+                // Determining the Objective Weights
+                $weightCritic = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $weightCritic[$i] = $est[$i] / array_sum($est);
+                }
+
+                // COMPARISON
+                arsort($weight);
+                arsort($weightCritic);
+
+                // MOORA
+                // Normalization of the Decision Matrix
+                $power = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        $power[$i][$j] = pow($matrix[$i][$j], 2);
+                    }
+                }
+
+                $powSum = [];
+                for ($i = 1; $i <= $jumlahKriteria; $i++) {
+                    $powSum[$i] = array_sum(array_column($power, $i));
+                }
+                //dd($power);
+                
+                $normalisasiMoora = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        $normalisasiMoora[$i][$j] = $matrix[$i][$j] / sqrt($powSum[$j]);
+                    }
+                }
+
+                //Weighting Normalized Decision Matrix
+                $merecWeighted = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        if (Criteria::find($j)->type == 'cost') {
+                            $merecWeighted[$i][$j] = -1 * $normalisasiMoora[$i][$j] * $weight[$j];
+                        } else {
+                            $merecWeighted[$i][$j] = $normalisasiMoora[$i][$j] * $weight[$j];
+                        }
+                    }
+                }
+
+                $criticWeighted = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    for ($j = 1; $j <= $jumlahKriteria; $j++) {
+                        if (Criteria::find($j)->type == 'cost') {
+                            $criticWeighted[$i][$j] = -1 * $normalisasiMoora[$i][$j] * $weightCritic[$j];
+                        } else {
+                            $criticWeighted[$i][$j] = $normalisasiMoora[$i][$j] * $weightCritic[$j];
+                        }
+                    }
+                }
+
+                // Result
+                $merecRank = [];
+                $criticRank = [];
+                for ($i = 1; $i <= $jumlahAlternatif; $i++) {
+                    $merecRank[$i] = array_sum($merecWeighted[$i]);
+                    $criticRank[$i] = array_sum($criticWeighted[$i]);
+                }
+
+                // sort value from highest to lowest
+                arsort($merecRank);
+                arsort($criticRank);
+            }
+        }
+
+        // dd($matrix, $max, $min, $normalisasi, $sumEachCriteria, $averageValue, $pow, $sumPow, $result, $sumResult, $criteriaWeight, $psi, $sumPsi, $sumPsiRank);
+
+        return view('contents.calculateMoora.index', [
+            'data' => $data,
+            'matrix' => $matrix,
+            'max' => $max,
+            'min' => $min,
+            'normalisasi' => $normalisasi,
+            'sumEachCriteria' => $sumEachCriteria,
+            'sumAbsLogCriteria' => $sumAbsLogCriteria,
             'alternativeCount' => $alternativeCount,
             'criteriaCount' => $criteriaCount,
             'logValues' => $logValues,
