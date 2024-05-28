@@ -385,7 +385,7 @@
                 <tr>
                   <td>Criterias</td>
                   <td>Weight</td>
-                  <td>Rank</td>
+<!--                  <td>Rank</td> -->
                 </tr>
               </thead>
               <tbody>
@@ -398,7 +398,7 @@
                     <tr>
                       <td>C{{ $key }}</td>
                       <td>{{ round($weight[$key], 4) }}</td>
-                      <td>{{ $loop->iteration }}</td>
+<!--                      <td>{{ $loop->iteration }}</td> -->
                     </tr>
                     @endforeach
 
@@ -409,7 +409,7 @@
                 <tr>
                   <td>Criterias</td>
                   <td>Weight</td>
-                  <td>Rank</td>
+<!--                  <td>Rank</td> -->
                 </tr>
               </tfoot>
             </table>
@@ -1375,7 +1375,7 @@
     'paging': false
   });
   $('#merec_6').DataTable({
-    'ordering': false,
+    'ordering': true,
     'paging': false
   });
   $('#critic_1').DataTable({

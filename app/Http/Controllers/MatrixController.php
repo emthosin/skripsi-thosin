@@ -358,7 +358,6 @@ class MatrixController extends Controller
                     // Add the column array to the columns array
                     $columns[] = $column;
                 }
-                //dd($columns[1]);
 
                 $correl = [];
                 for ($i = 1; $i <= count($normalisasiCritic[$i]); $i++) {
@@ -390,8 +389,9 @@ class MatrixController extends Controller
                 }
 
                 // COMPARISON
-                arsort($weight);
-                arsort($weightCritic);
+                //arsort($weight);
+                //arsort($weightCritic);
+                //dd($weightCritic);
 
                 // MOORA
                 // Normalization of the Decision Matrix
@@ -447,8 +447,8 @@ class MatrixController extends Controller
                 }
 
                 // sort value from highest to lowest
-                arsort($merecRank);
-                arsort($criticRank);
+                //arsort($merecRank);
+                //arsort($criticRank);
                 /* 
                 // 1 / alternative amount, then times with $sumEachCriteria
                 $averageValue = array_map(function ($value) use ($jumlahAlternatif) {
@@ -927,8 +927,8 @@ class MatrixController extends Controller
                 }
 
                 // COMPARISON
-                arsort($weight);
-                arsort($weightCritic);
+                //arsort($weight);
+                //arsort($weightCritic);
 
                 // MOORA
                 // Normalization of the Decision Matrix
@@ -984,8 +984,8 @@ class MatrixController extends Controller
                 }
 
                 // sort value from highest to lowest
-                arsort($merecRank);
-                arsort($criticRank);
+                //arsort($merecRank);
+                //arsort($criticRank);
             }
         }
 
